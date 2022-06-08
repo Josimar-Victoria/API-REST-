@@ -1,6 +1,7 @@
-import { Schema, model } from 'mongoose'
+import mongoose from 'mongoose'
+import bcrypt from 'bcryptjs'
 
-const UserSchema = new Schema({
+const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
@@ -12,11 +13,31 @@ const UserSchema = new Schema({
   password: {
     type: String,
     required: true
-  },
-  confirmPassword: {
-    type: String,
-    required: true
   }
 })
 
-export const User = model('User', UserSchema)
+userSchema.pre('save', async function (next) {
+  const user = this
+
+  if (!user.isModified('password')) return next()
+
+  try {
+    const salt = await bcrypt.genSalt(10)
+    user.password = await bcrypt.hash(user.password, salt)
+    next()
+  } catch (error) {
+    console.log(error)
+    throw new Error('Failed to hash password')
+  }
+})
+
+userSchema.methods.comparePassword = async function (canditatePassword) {
+  try {
+    return await bcrypt.compare(canditatePassword, this.password)
+  } catch (error) {
+    console.log(error)
+    throw new Error('Failed to compare password')
+  }
+}
+
+export const User = mongoose.model('User', userSchema)
