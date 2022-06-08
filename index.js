@@ -1,11 +1,12 @@
-import 'dotenv/config';
+import 'dotenv/config'
 import './database/connectdb.js'
 import express from 'express'
+import authRouter from './routes/auth.route.js'
+
 const app = express()
 
-app.get('/', (req, res) => {
-  res.json({ ok: true })
-})
+app.use(express.json())
+app.use('/api/v1', authRouter)
 
 const POST = process.env.POST || 5000
 
