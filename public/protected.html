@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ruta protegida</title>
+  </head>
+  <body>
+    <h1>Ruta protegida</h1>
+    <div id="app">
+      <p>Esta ruta es protegida. Para acceder a ella, debes iniciar sesión.</p>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          const res = await fetch("/api/v1/auth/protected", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            //   Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          if (res.ok) {
+            document.getElementById("app").textContent = data.email;
+          } else {
+            document.getElementById("app").textContent = "No autorizado";
+          }
+          console.log(res.ok, res.status);
+          const data = await res.json();
+          console.log({ data });
+        } catch (error) {
+          console.log(error);
+        }
+      });
+    </script>
+  </body>
+</html>

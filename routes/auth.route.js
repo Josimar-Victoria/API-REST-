@@ -1,7 +1,8 @@
-import {Router} from 'express'
-import { login, register } from '../controllers/auth.controller.js'
+import { Router } from 'express'
+import { infoUser, login, register } from '../controllers/auth.controller.js'
 import { body } from 'express-validator'
 import { validationResultExpress } from '../middlewares/validationResultExpress.js'
+import { requireUserToken } from '../middlewares/requireUserToken.js'
 const router = Router()
 
 // Router
@@ -44,4 +45,5 @@ router.post(
   login
 )
 
+router.get('/protected', requireUserToken, infoUser)
 export default router

@@ -1,5 +1,5 @@
 import { User } from '../models/User.js'
-import jwt from 'jsonwebtoken'
+import { generateToken } from '../utils/tokenManager.js'
 
 export const register = async (req, res) => {
   const { email, password } = req.body
@@ -40,12 +40,31 @@ export const login = async (req, res) => {
       return res.status(403).json({ error: 'Password is incorrect.' })
 
     //Generar token
-    const token = jwt.sign({ uid: user._id }, process.env.JWT_SECRET)
+    const { token, expiresIn } = generateToken(user._id)
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: !(process.env.MODO === 'developer')
+    })
 
     return res.status(200).json({
       message: 'User logged in successfully',
       user,
-      token
+      token,
+      expiresIn
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const infoUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.uid).lean()
+    return res.status(200).json({
+      message: 'User info',
+      email: user.email,
+      uid: user._id
     })
   } catch (error) {
     console.log(error)
