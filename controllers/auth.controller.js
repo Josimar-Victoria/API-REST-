@@ -1,5 +1,6 @@
 import { User } from '../models/User.js'
-import { generateToken } from '../utils/tokenManager.js'
+import { generateRefreshToken, generateToken } from '../utils/tokenManager.js'
+import jwt from 'jsonwebtoken'
 
 export const register = async (req, res) => {
   const { email, password } = req.body
@@ -41,10 +42,7 @@ export const login = async (req, res) => {
 
     //Generar token
     const { token, expiresIn } = generateToken(user._id)
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: !(process.env.MODO === 'developer')
-    })
+    generateRefreshToken(user._id, res)
 
     return res.status(200).json({
       message: 'User logged in successfully',
@@ -65,6 +63,37 @@ export const infoUser = async (req, res) => {
       message: 'User info',
       email: user.email,
       uid: user._id
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const refreshToken = (req, res) => {
+  try {
+    const { resfreshToken } = req.cookies
+    if (!resfreshToken) throw new Error('Token not exists')
+
+    const { uid } = jwt.verify(resfreshToken, process.env.JWT_REFRESH)
+    const { token, expiresIn } = generateToken(uid)
+    
+    return res.status(200).json({
+      message: 'Token refreshed successfully',
+      token,
+      expiresIn
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const logout = (req, res) => {
+  try {
+    res.clearCookie('resfreshToken')
+    return res.status(200).json({
+      message: 'User logged out successfully'
     })
   } catch (error) {
     console.log(error)
