@@ -1,6 +1,5 @@
 import { User } from '../models/User.js'
 import { generateRefreshToken, generateToken } from '../utils/tokenManager.js'
-import jwt from 'jsonwebtoken'
 
 export const register = async (req, res) => {
   const { email, password } = req.body
@@ -11,11 +10,16 @@ export const register = async (req, res) => {
 
     user = new User({ email, password })
     await user.save()
+
     //Generar token
+    const { token, expiresIn } = generateToken(user._id)
+    generateRefreshToken(user._id, res)
 
     return res.status(201).json({
       message: 'User created successfully',
-      user
+      user,
+      token,
+      expiresIn
     })
   } catch (error) {
     // Alternativa por defecto mongoose
@@ -72,12 +76,8 @@ export const infoUser = async (req, res) => {
 
 export const refreshToken = (req, res) => {
   try {
-    const { resfreshToken } = req.cookies
-    if (!resfreshToken) throw new Error('Token not exists')
+    const { token, expiresIn } = generateToken(req.uid)
 
-    const { uid } = jwt.verify(resfreshToken, process.env.JWT_REFRESH)
-    const { token, expiresIn } = generateToken(uid)
-    
     return res.status(200).json({
       message: 'Token refreshed successfully',
       token,
